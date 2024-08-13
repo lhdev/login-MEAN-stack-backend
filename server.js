@@ -8,7 +8,7 @@ const app = express();
 
 
 const corsOptions = {
-    origin: 'http://localhost:56593', // Substitua pelo URL do seu frontend
+    origin: 'http://localhost:56593',
     optionsSuccessStatus: 200
 };
 

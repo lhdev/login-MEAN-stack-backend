@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import cors from 'cors';
+import { userInfo } from 'os';
 
 const prisma = new PrismaClient();
 const router = express.Router();
@@ -18,27 +19,33 @@ const testConnection = async () => {
     }
 };
 
-router.post('/cadastro', async (req, res) => {
-    try {
-        const user = req.body;
+router.use(cors());
+router.use(express.json());
 
-        if (!user.email || !user.name || !user.password) {
+router.post('/signup', async (req, res) => {
+    try {
+        const userInfo = req.body;
+        
+        if (!userInfo.email || !userInfo.name || !userInfo.password) {
             return res.status(400).json({ message: 'Todos os campos são obrigatórios' });
         }
 
-        const hasLetter = /[a-zA-Z]/.test(user.password);
-        const hasNumber = /[0-9]/.test(user.password);
+        const hasLetter = /[A-Za-z]/.test(userInfo.password);  
+        const hasNumber = /[0-9]/.test(userInfo.password);     
+        
+        console.log('Dados recebidos na requisição:', userInfo.password, hasLetter, hasNumber);
+        
         if (!hasLetter || !hasNumber) {
             return res.status(400).json({ message: 'A senha deve conter pelo menos uma letra e um número' });
         }
-
+        
         const salt = await bcrypt.genSalt(10);
-        const hashPassword = await bcrypt.hash(String(user.password), salt);
+        const hashPassword = await bcrypt.hash(String(userInfo.password), salt);
 
         const userDB = await prisma.user.create({
             data: {
-                email: user.email,
-                name: user.name,
+                email: userInfo.email,
+                name: userInfo.name,
                 password: hashPassword,
             },
         });
@@ -73,7 +80,7 @@ router.post('/login', async (req, res) => {
 
         return res.status(200).json({ token });
     } catch (err) {
-        console.error('Erro no servidor:', err); // Log do erro
+        console.error('Erro no servidor:', err);
         return res.status(500).json({ message: 'Erro no Servidor, tente novamente' });
     }
 });
